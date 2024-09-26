@@ -1,6 +1,10 @@
 (voting)=
 # Approval voting
 
+```{warning}
+This guide needs a bit of updating.
+```
+
 The aim of this notebook is to show some code for generating a Qualtrics voting form for a workshop, as we used in [SNUFA 2022](https://snufa.net/2022).
 
 ## Step 1: Collect abstracts
