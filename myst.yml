@@ -1,0 +1,17 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  title: Guide to running SNUFA
+  description: A guide for how to run the SNUFA conference
+  # keywords: []
+  authors:
+    - name: Dan Goodman
+  github: https://github.com/snufa/guide-to-running-snufa
+  exclude:
+    - README.md
+  # To autogenerate a Table of Contents, run "myst init --write-toc"
+site:
+  template: book-theme
+  # options:
+  #   favicon: favicon.ico
+  #   logo: site_logo.png
