@@ -7,11 +7,15 @@ This guide needs a bit of updating.
 
 The aim of this notebook is to show some code for generating a Qualtrics voting form for a workshop, as we used in [SNUFA 2022](https://snufa.net/2022).
 
+## Code
+
+You can use [](./code/generate_survey.ipynb) to generate a nice HTML representation of the code and the survey file to import into Qualtrics.
+
 ## Step 1: Collect abstracts
 
-We used [Office Forms](https://forms.office.com) but Google forms or any other system would work as well. We collected author names, emails, abstract text and whether or not you wanted to be considered for poster or talk.
+We used [Office Forms](https://forms.office.com) but Google forms or any other system would work as well. We collected author names, emails, abstract text and whether or not you wanted to be considered for poster or talk. For our precise list of questions, see @submissions. If you change the questions, you'll need to tweak the code below slightly.
 
-From this we get an Excel file that can be converted to a CSV.
+From this we get an Excel file that can be converted to a CSV. Make sure to use the option to save as CSV-UTF8 since you'll probably have accents in some names.
 
 ## Step 2: Generate Qualtrics survey
 
@@ -54,18 +58,33 @@ Once you have a file in this format, you can [import it into Qualtrics](https://
 We use Python and the [Jinja templating engine](https://palletsprojects.com/p/jinja/) to do this. In addition to the above, we insert a ``[[Block]]`` in between each batch of questions. Here's the code.
 
 ```Python
+# Import a few standard packages
 import csv
 import jinja2
+from IPython.core.display import HTML
 
-with open('submissions.csv', newline='') as csvfile:
+# Read the submissions and do a bit of data cleaning
+with open('submissions.csv', newline='', encoding='utf8') as csvfile:
     csvreader = csv.DictReader(csvfile, dialect='excel')
     submissions = list(csvreader)
+for submission in submissions:
+    for k, v in list(submission.items()):
+        # This character shows up for some reason (unclear)
+        k_new = k.replace('\ufeff', '').strip().split('\n')[0]
+        # Some people use all caps for the title, so we automatically fix that
+        if k_new=='Presentation title' and v.upper()==v:
+            v = v.title()
+        # some people paste text with newlines for every line which looks ugly, so we detect that and automatically fix
+        if k_new=='Abstract (please keep under 300 words)' and max(map(len, v.split('\n')))<120:
+            v = v.replace('\n', ' ')
+        submission[k_new] = v
+    submission['ID'] = submission['\ufeffID'] # not sure why forms inserts this random character
 
+# This generates the survey text that can be imported into Qualtrics
 template = jinja2.Template('''
 [[AdvancedFormat]]
     
 {% for sub in submissions %}
-{% if sub['Would you prefer a poster or talk (if selected)?']=="Talk preferred" %}
 
 [[Block]]
 
@@ -94,12 +113,13 @@ Yes
 Any comments?
 [[Choices]]
 Insert comments here.
-{% endif %}
 {% endfor %}
 ''')
 
 survey = template.render(submissions=submissions)
 
+#HTML(template.render(submissions=submissions))
+print(survey)
 open('survey.txt', 'w', encoding='utf-8').write(survey)
 ```
 
