@@ -1,10 +1,6 @@
 (voting)=
 # Approval voting
 
-```{warning}
-This guide needs a bit of updating.
-```
-
 The aim of this notebook is to show some code for generating a Qualtrics voting form for a workshop, as we used in [SNUFA 2022](https://snufa.net/2022).
 
 ## Code
@@ -125,7 +121,7 @@ open('survey.txt', 'w', encoding='utf-8').write(survey)
 
 ### Importing and tweaking the form in Qualtrics
 
-Having imported the generated ``survey.txt`` file into a new Qualtrics survey, I added randomisation. Asking your audience to vote on all the abstracts might be a bit too much, so we can show each voter a random subset using [Qualtrics' Randomizer](https://www.qualtrics.com/support/survey-platform/survey-module/survey-flow/standard-elements/randomizer/). Create a Randomizer in the survey flow, drag all the imported blocks into it, and ask it to show 10 at a time with the "Evenly Present Elements" option.
+Having imported the generated ``survey.txt`` file into a new Qualtrics survey, I added randomisation. Asking your audience to vote on all the abstracts might be a bit too much, so we can show each voter a random subset using [Qualtrics' Randomizer](https://www.qualtrics.com/support/survey-platform/survey-module/survey-flow/standard-elements/randomizer/). Create a Randomizer in the survey flow, drag all the imported blocks into it, and ask it to show 10 at a time with the "Evenly Present Elements" option. Note: this value worked well for SNUFA 2023 for example, where we had about 40 abstracts and 160 people participated in the voting (of around 700 who registered), meaning that we got about 40 votes per abstract. If your abstract to participant ratio is different, you might want to increase the number of abstracts each person has to evaluate.
 
 You might also want to tweak the options for how the form is displayed, add a logo, intro page, etc.
 
