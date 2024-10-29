@@ -7,6 +7,8 @@ The aim of this notebook is to show some code for generating a Qualtrics voting 
 
 You can use [](./code/generate_survey.ipynb) to generate a nice HTML representation of the code and the survey file to import into Qualtrics.
 
+You can use [](./code/generate_abstracts.ipynb) to generate the markdown files for abstracts to upload to the conference website.
+
 ## Step 1: Collect abstracts
 
 We used [Office Forms](https://forms.office.com) but Google forms or any other system would work as well. We collected author names, emails, abstract text and whether or not you wanted to be considered for poster or talk. For our precise list of questions, see @submissions. If you change the questions, you'll need to tweak the code below slightly.
@@ -129,7 +131,7 @@ You might also want to tweak the options for how the form is displayed, add a lo
 
 Send a copy to all your workshop participants and give them a week to respond.
 
-## Step 4: Analyse your data
+## Step 4: Analyse data
 
 Download the votes in CSV format. Load them with something like this:
 
@@ -255,91 +257,8 @@ submissions_html = template.render(talk_submissions=talk_submissions, poster_sub
 open('submissions_with_votes.html', 'w', encoding='utf-8').write(submissions_html)
 ```
 
-We take the top 8 in our case, and get a list of email addresses to let authors know.
+## Step 5: Finalise the programme
 
-```Python
-all_talks = talk_submissions[:8]
-all_posters = talk_submissions[8:]+poster_submissions
-for sub in all_talks:
-    sub['talk'] = True
-for sub in all_posters:
-    sub['talk'] = False
-    
-# Talk emails
-print("Talk emails:", ', '.join(sub['Corresponding author email address'] for sub in talk_submissions[:8]))
+From this list, you can pick the top N as talks, flash talks, etc. In SNUFA 2024 we took the top 7 as short talks and the next 10 as two minute flash talks. We save this into a new CSV file ``selected.csv``. Email the authors and confirm times, etc. You may need to remove some as authors will withdraw at this point, and you can promote some flash talks to full talks, and posters to flash talks, and so on. We store this in ``selected.csv`` with a column ``decision``.
 
-# Poster emails
-all_posters = talk_submissions[8:]+poster_submissions
-all_posters.sort(key=lambda sub: sub['Corresponding author name'])
-print("Poster emails: ", ', '.join(sub['Corresponding author email address'] for sub in all_posters))
-```
-
-We might want to take a look at the histogram of votes.
-
-```Python
-boundary = (talk_submissions[8]['approval']+talk_submissions[7]['approval'])/2
-print(f'Boundary = {round(100*boundary)}%')
-binedges = boundary+np.arange(-20, 21)*0.1
-counts, binedges, _ = plt.hist([sub['approval'] for sub in talk_submissions], bins=binedges, label='All submissions (talk preferred)')
-plt.hist([sub['approval'] for sub in talk_submissions[:8]], bins=binedges, label='Accepted for talk')
-plt.axvline(boundary, ls='--', c='k', label=f'Cutoff = {round(100*boundary)}%')
-plt.xlabel('Fraction interested in seeing submission as talk')
-plt.ylabel('Number of submissions')
-plt.xlim(0, 1)
-plt.legend(loc='best')
-plt.tight_layout()
-```
-
-And finally generate an abstracts list.
-
-```Python
-def generate_stub(sub):
-    title_words = sub['Presentation title'].split(' ')
-    title_words = [word for word in title_words if len(word)>3]
-    name = ' '.join(sub['Corresponding author name'].split(' ')[:2])
-    stub = name+' '+title_words[0]
-    stub = stub.lower().replace(' ', '-').replace(':', '').replace('.', '').replace(',', '')
-    return stub
-
-from random import shuffle
-shuffle(submissions)
-
-template = jinja2.Template('''
-# {{ sub['Presentation title'] }}
-
-**Authors:** {{ sub['Presentation authors'] }}
-
-**Presentation type:** {{ 'Talk' if sub['talk'] else 'Poster' }}
-
-## Abstract
-
-{{ sub['Abstract (please keep under 300 words)'] }}
-''')
-
-for sub in submissions:
-    stubname = generate_stub(sub)
-    sub['abstract_filename'] = fname = f'abstracts/{stubname}.md'
-    with open(fname, 'w', encoding='utf-8') as f:
-        f.write(template.render(sub=sub))
-
-template = jinja2.Template('''
-# SNUFA 2022 Abstracts
-
-## Invited talks (TBD)
-
-## Contributed talks
-
-{% for sub in all_talks | sort(attribute='abstract_filename') %}
-* [{{ sub['Presentation title'] }}]({{ sub['abstract_filename'] }}) ({{ sub['Presentation authors'] }})
-{% endfor %}
-
-## Posters
-
-{% for sub in all_posters | sort(attribute='abstract_filename') %}
-* [{{ sub['Presentation title'] }}]({{ sub['abstract_filename'] }}) ({{ sub['Presentation authors'] }})
-{% endfor %}
-
-''')
-
-open('all_abstracts.md', 'w', encoding='utf-8').write(template.render(all_talks=all_talks, all_posters=all_posters))
-```
+Once you have all the confirmations, you can generate abstracts as markdown files and upload to the website, see [](./code/generate_abstracts.ipynb).
